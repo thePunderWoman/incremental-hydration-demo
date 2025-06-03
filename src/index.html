@@ -1,13 +1,54 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
-  <title>IncrementalHydration</title>
+  <title>Partial Hydration in Angular</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <script>window.__ngDemoTimeout__ = 3000;</script>
 </head>
+
 <body>
-  <app-root></app-root>
+  <app-root class="hydrated"></app-root>
+  <script>
+    function markNode(el) {
+      if (el.nodeType !== Node.ELEMENT_NODE) return;
+      if (el.getAttribute('ngh')) {
+        el.setAttribute('ng-cmp', 'true');
+        if (!el.__frozen) {
+          el.classList.add('dehydrated');
+        }
+      }
+      if (el.getAttribute('ng-cmp') && el.__ngDebugHydrationInfo__) {
+        el.classList.remove('dehydrated');
+        el.classList.add('hydrated');
+      }
+      let current = el.firstChild;
+      while (current) {
+        markNode(current);
+        current = current.nextSibling;
+      }
+    }
+    setInterval(() => {
+      markNode(document.querySelector('app-root'));
+    }, 100);
+    markNode(document.querySelector('app-root'));
+
+    document.querySelectorAll('button').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        let current = btn;
+        while (current && current !== document.body) {
+          if (current.classList.contains('deferred')) {
+            current.classList.remove('dehydrated');
+            current.__frozen = true;
+          }
+          current = current.parentElement;
+        }
+      });
+    });
+  </script>
 </body>
+
 </html>
