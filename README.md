@@ -1,59 +1,45 @@
 # IncrementalHydration
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.10.
+This is the Angular Incremental Hydration wireframe demo. All you should need to do is install deps and you can run the app with `ng serve --no-hmr`.
 
-## Development server
+## Delay code
 
-To start a local development server, run:
+To get the delay to work, you need to modify the `node_modules/@angular/core/packages/core/fesm2022/core.mjs` file. Make sure you also disable the angular cli cache to ensure the actual change gets picked up: `ng cache off`.
 
-```bash
-ng serve
+This should give you context. Search for the comment at the top, and you should be able to make these changes:
+
+```ts
+    // The `dependenciesFn` might be `null` when all dependencies within
+    // a given defer block were eagerly referenced elsewhere in a file,
+    // thus no dynamic `import()`s were produced.
++    const promise = new Promise((resolve) => {
++
++        if (typeof window !== 'undefined') {
++          const timeout = window.__ngDemoTimeout__ ?? 0;
++          setTimeout(() => resolve(), timeout);
++        } else {
++          resolve();
++        }
++      });
+
+    if (!dependenciesFn) {
++        tDetails.loadingPromise = promise.then(() => {
+            tDetails.loadingPromise = null;
+            tDetails.loadingState = DeferDependenciesLoadingState.COMPLETE;
+            pendingTasks.remove(taskId);
+        });
+        return tDetails.loadingPromise;
+    }
+    // Start downloading of defer block dependencies.
++    tDetails.loadingPromise = Promise.allSettled([promise, ...dependenciesFn()]).then((results) => {
+        let failed = false;
+        const directiveDefs = [];
+        const pipeDefs = [];
+        for (const result of results) {
+            if (result.status === 'fulfilled') {
+                const dependency = result.value;
++                if (!dependency) continue;
+                const directiveDef = getComponentDef(dependency) || getDirectiveDef(dependency);
+                if (directiveDef) {
+                    directiveDefs.push(directiveDef);
 ```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
