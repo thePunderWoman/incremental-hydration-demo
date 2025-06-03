@@ -5,7 +5,7 @@
     @defer (on interaction; hydrate on interaction) {
       <product-cmp class="deferred">
         <p class="cmp-name">&lt;Product&gt;</p>
-        @defer (on interaction; hydrate on idle) {
+        @defer (on interaction; hydrate on interaction) {
           <details-cmp class="deferred">
             <p class="cmp-name">&lt;Details&gt;</p>
             <div style="display: flex;">
